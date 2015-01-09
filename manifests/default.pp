@@ -29,7 +29,7 @@ class { 'java': }
 class { 'elasticsearch':
 	java_install => true,
 	manage_repo  => true,
-	repo_version => '1.3',
+	repo_version => '1.4',
 }
 
 elasticsearch::instance { 'es-01':
@@ -37,7 +37,8 @@ elasticsearch::instance { 'es-01':
 	'cluster.name' => 'vagrant_elasticsearch',
 	'index.number_of_replicas' => '0',
 	'index.number_of_shards'   => '1',
-	'network.host' => '0.0.0.0'
+	'network.host' => '0.0.0.0',
+	'marvel.agent.exporter.es.host' => ["$elasticsearch_url"],
   },        # Configuration hash
   init_defaults => { }, # Init defaults hash
 }
@@ -45,6 +46,12 @@ elasticsearch::instance { 'es-01':
 elasticsearch::plugin{'royrusso/elasticsearch-HQ':
   module_dir => 'HQ',
   instances  => 'es-01'
+}
+
+elasticsearch::plugin {
+    'elasticsearch/marvel/latest':
+        module_dir  => 'marvel',
+	instances  => 'es-01'
 }
 
 # Logstash
@@ -99,3 +106,10 @@ exec { 'download_kibana':
   creates => '/vagrant/kibana/kibana-latest/config.js',
   require => [ Package['curl'], File['/vagrant/kibana'] ],
 }
+
+# vim and htop
+package { ['vim','htop']:
+  ensure => 'present',
+  require => [Class['apt']],
+}
+
